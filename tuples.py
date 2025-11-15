@@ -5,3 +5,4 @@ my_list=list(name)
 my_list[0]='geme'#changing value
 print(type(my_list))#checking data type
 print(my_list)
+from function import greet as hello
