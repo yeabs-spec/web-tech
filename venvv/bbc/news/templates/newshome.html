@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<h1>news</h1>
+<body>
+    <div class="card shadow-sm" style="max-width: 26rem;">
+
+        {% for post in news %}
+  <div class="card-body">
+    <span class="badge bg-primary mb-2">{{post.lable}}</span>
+    <h5 class="card-title mt-2">{{post.title}}</h5>
+    <h6 class="card-subtitle mb-2 text-muted">{{post.sentiment}}</h6>
+
+    <p class="card-text">
+    {{post.text}}
+    </p>
+
+    <div class="mt-3">
+      <span class="badge bg-secondary">{{post.keywords}}</span>
+
+    </div>
+  </div>
+        {% endfor %}
+</div>
+
+</body>
+</html>

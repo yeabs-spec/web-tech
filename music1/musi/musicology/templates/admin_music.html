@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Admin | MusicHub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        .table-img { 
+            width: 50px; height: 50px; object-fit: cover; border-radius: 6px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        }
+        .modal { background: rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark mb-4 shadow">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="{% url 'homeurl' %}">MUSIC<span>HUB</span> ADMIN</a>
+        <a href="{% url 'homeurl' %}" class="btn btn-outline-light btn-sm">Exit Admin</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="card border-0 shadow-sm p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h3 class="fw-bold mb-0">Manage Songs</h3>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addModal">
+                <i class="bi bi-plus-circle"></i> Add New Track
+            </button>
+        </div>
+
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Cover</th>
+                    <th>Song & Artist</th>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in musics %}
+                <tr>
+                    <td>
+                        {% if m.image %}
+                            <img src="{{ m.image.url }}" class="table-img">
+                        {% else %}
+                            <div class="table-img bg-secondary"></div>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="fw-bold">{{ m.name }}</div>
+                        <div class="small text-muted">{{ m.singer }}</div>
+                    </td>
+                    <td><span class="badge bg-secondary">{{ m.mugory.name|default:"No Genre" }}</span></td>
+                    <td>
+                        <small class="text-muted">
+                            {{ m.description|truncatechars:30|default:"No description provided" }}
+                        </small>
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editModal{{ m.id }}">
+                            <i class="bi bi-pencil"></i> Edit
+                        </button>
+
+                        <form method="POST" class="d-inline" onsubmit="return confirm('Delete this song?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="m_id" value="{{ m.id }}">
+                            <button class="btn btn-sm btn-danger"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% for m in musics %}
+<div class="modal fade" id="editModal{{ m.id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update">
+            <input type="hidden" name="m_id" value="{{ m.id }}">
+            
+            <div class="modal-header">
+                <h5 class="modal-title">Update: {{ m.name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Title</label>
+                    <input type="text" name="name" value="{{ m.name }}" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Singer</label>
+                    <input type="text" name="singer" value="{{ m.singer }}" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Category</label>
+                    <select name="category" class="form-select">
+                        {% for c in categories %}
+                        <option value="{{ c.id }}" {% if c.id == m.mugory.id %}selected{% endif %}>{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Description</label>
+                    <textarea name="description" class="form-control" rows="3">{{ m.description|default:"" }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small">Rating (0-5)</label>
+                    <input type="number" name="rating" value="{{ m.rating }}" step="0.1" max="5" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-primary">Update Cover Image</label>
+                    <input type="file" name="image" class="form-control">
+                </div>
+                <div class="mb-0">
+                    <label class="form-label fw-bold small text-primary">Update Music File</label>
+                    <input type="file" name="file" class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endfor %}
+
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="create">
+            <div class="modal-header bg-success text-white"><h5>Add New Song</h5></div>
+            <div class="modal-body">
+                <input type="text" name="name" placeholder="Song Title" class="form-control mb-2" required>
+                <input type="text" name="singer" placeholder="Artist Name" class="form-control mb-2" required>
+                <select name="category" class="form-select mb-2" required>
+                    <option value="">Select Category</option>
+                    {% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}
+                </select>
+                <textarea name="description" placeholder="Short Description..." class="form-control mb-2" rows="2"></textarea>
+                <input type="number" name="rating" placeholder="Rating (0.0 - 5.0)" step="0.1" class="form-control mb-2">
+                <label class="small fw-bold">Cover Image</label>
+                <input type="file" name="image" class="form-control mb-2" required>
+                <label class="small fw-bold">Music File (MP3)</label>
+                <input type="file" name="file" class="form-control" required>
+            </div>
+            <div class="modal-footer"><button type="submit" class="btn btn-success w-100">Upload & Save</button></div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
